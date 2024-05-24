@@ -103,7 +103,7 @@ object Demo11 extends Simulation[Main11]
 class Main12 extends AggregateProgramSkeleton:
   import Builtins.Bounded.of_i
 
-  override def main() = maxHoodPlus(boolToInt(nbr{sense1}))
+  override def main() = foldhoodPlus(Set())((acc, v) => acc ++ v)(Set(nbr(mid())))//maxHoodPlus(boolToInt(nbr{sense1}))
 
 object Demo12 extends Simulation[Main12]
 
