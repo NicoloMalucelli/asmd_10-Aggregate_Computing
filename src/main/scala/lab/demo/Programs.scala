@@ -29,7 +29,7 @@ trait Simulation[R: ClassTag] extends App:
 
   val nodes = 100
   val neighbourRange = 200
-  val (width, height) = (1920, 1080)
+  val (width, height) = (1500, 800)
 
   ViewSetting.windowConfiguration = WindowConfiguration(width, height)
   ViewSetting.labelFontSize = 20
@@ -86,7 +86,7 @@ class Main8 extends AggregateProgramSkeleton:
 object Demo8 extends Simulation[Main8]
 
 class Main9 extends AggregateProgramSkeleton:
-  override def main() = rep(0){_+1}
+  override def main() = mux(sense1)(rep(0){x => Math.min(x+1, 1_000)})(0)
 
 object Demo9 extends Simulation[Main9]
 
