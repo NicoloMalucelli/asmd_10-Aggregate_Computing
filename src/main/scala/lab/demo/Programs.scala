@@ -1,15 +1,15 @@
 package lab.demo
 
 import it.unibo.scafi.incarnations.BasicAbstractIncarnation
-import it.unibo.scafi.simulation.s2.frontend.incarnation.scafi.bridge.ExportEvaluation.EXPORT_EVALUATION
+import it.unibo.scafi.simulation.s2.frontend.incarnation.scafi.bridge.ExportEvaluation.{EXPORT_EVALUATION, standardEvaluation}
 import it.unibo.scafi.simulation.s2.frontend.incarnation.scafi.bridge.{ScafiSimulationInitializer, SimulationInfo}
 import it.unibo.scafi.simulation.s2.frontend.incarnation.scafi.configuration.{ScafiProgramBuilder, ScafiWorldInformation}
-import it.unibo.scafi.simulation.s2.frontend.incarnation.scafi.world.ScafiWorldInitializer.Random
+import it.unibo.scafi.simulation.s2.frontend.incarnation.scafi.world.ScafiWorldInitializer.{Random, standardShape}
 import it.unibo.scafi.simulation.s2.frontend.incarnation.scafi.bridge.ScafiWorldIncarnation.EXPORT
 import it.unibo.scafi.simulation.s2.frontend.view.{ViewSetting, WindowConfiguration}
 import it.unibo.scafi.space.graphics2D.BasicShape2D.Circle
 
-import scala.reflect._
+import scala.reflect.*
 
 object Incarnation extends BasicAbstractIncarnation with BuildingBlocks
 import lab.demo.Incarnation._ //import all stuff from an incarnation
@@ -25,6 +25,8 @@ trait Simulation[R: ClassTag] extends App:
     case i: java.lang.Number if (i.doubleValue()>100000) => "Inf"
     case i: java.lang.Number if (-i.doubleValue()>100000) => "-Inf"
     case i: java.lang.Double => f"${i.doubleValue()}%1.2f"
+    case i: java.lang.Boolean if i => "X"
+    case i: java.lang.Boolean => ""
     case x => x.toString
 
   val nodes = 100
@@ -177,17 +179,17 @@ class Channel extends AggregateProgramSkeleton with BlockT:
 
   private def gradient(source: Boolean) = rep[Double](Double.MaxValue){x => mux[Double](source){0.0}{minHoodPlus(nbr{x}+nbrRange)}}
 
-  private def broadcast(source: Boolean, input: Double) =
-    rep((Double.MaxValue, Double.MaxValue)){x =>
-      mux[(Double, Double)](source)
-        {(0.0, input)}
-        {minHoodPlus(nbr{x._1} + nbrRange, nbr{x._2})}
-    }
+  def broadcast(source: Boolean, input: Double) = rep((Double.MaxValue, Double.MaxValue)):
+    d => mux(source)
+      {(0.0, input)}
+      {minHoodPlus(nbr{d._1} + nbrRange, nbr{d._2})}
 
   def distance(source: Boolean, destination: Boolean) =
     broadcast(source, gradient(destination))
+
+  def channel(source: Boolean, destination: Boolean) =
+    gradient(source) + gradient(destination) <= distance(source, destination)._2
   override def main() =
-    distance(Set(10, 30, 60, 90) contains mid, mid == 0)
-    //gradient(sense1)
+    channel(mid == 0, mid == 1)
 
 object DemoChannel extends Simulation[Channel]
