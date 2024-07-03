@@ -81,7 +81,7 @@ class Main7 extends AggregateProgramSkeleton:
 object Demo7 extends Simulation[Main7]
 
 class Main8 extends AggregateProgramSkeleton:
-  override def main() = minHoodPlus(nbrRange)
+  override def main() = minHoodPlus((nbrRange, nbr(mid())))._2
 
 object Demo8 extends Simulation[Main8]
 
@@ -103,7 +103,8 @@ object Demo11 extends Simulation[Main11]
 class Main12 extends AggregateProgramSkeleton:
   import Builtins.Bounded.of_i
 
-  override def main() = foldhoodPlus(Set())((acc, v) => acc ++ v)(Set(nbr(mid())))//maxHoodPlus(boolToInt(nbr{sense1}))
+  override def main() = foldhoodPlus(Set())((acc, v) => acc ++ v)(Set(nbr(mid())))
+
 
 object Demo12 extends Simulation[Main12]
 
@@ -115,7 +116,7 @@ object Demo13 extends Simulation[Main13]
 class Main14 extends AggregateProgramSkeleton:
   import Builtins.Bounded.of_i
 
-  override def main() = rep(0){ x => boolToInt(sense1) max maxHoodPlus( nbr{x}) }
+  override def main() = rep(mid()){x => maxHood(nbr(x))}
 
 object Demo14 extends Simulation[Main14]
 
@@ -126,13 +127,38 @@ class Main15 extends AggregateProgramSkeleton:
 object Demo15 extends Simulation[Main15]
 
 class Main16 extends AggregateProgramSkeleton:
-  override def main() = rep(Double.MaxValue):
-    d => mux[Double](sense1){0.0}{minHoodPlus(nbr{d}+nbrRange)}
+  override def main() = rep[Double](Double.MaxValue) { x => mux[Double](sense1) {
+    0.0
+  } {
+    minHoodPlus(nbr {
+      x
+    } + mux(sense2) {
+      nbrRange * 5
+    } {
+      nbrRange
+    })
+  }
+  }
+
 
 object Demo16 extends Simulation[Main16]
 
+class MainPartition extends AggregateProgramSkeleton:
+
+  import Builtins.Bounded.*
+
+   private def partition(partitions: Set[Int]) =
+    rep[(Double, Int)]((Double.MaxValue, Int.MaxValue)){x =>
+      mux[(Double, Int)](partitions contains mid())
+        {(0.0, mid())}
+        {minHoodPlus(nbr{x._1} + nbrRange, nbr{x._2})}
+    }
+  override def main() = partition(Set(10, 20, 30))
+
+object DemoPartition extends Simulation[MainPartition]
+
 class Main17 extends AggregateProgramSkeleton with BlockG:
-  override def main() = gradientCast(source = sense1)(center = false)(accumulation = sense2 | _)
+  override def main() = rep[Double](Double.MaxValue){x => mux[Double](sense1){0.0}{minHoodPlus(nbr{x}+mux(sense2){nbrRange*5}{nbrRange})}}
 
 object Demo17 extends Simulation[Main17]
 
@@ -146,3 +172,22 @@ class Main19 extends AggregateProgramSkeleton with BlockT:
   override def main() =
     decay(10000, 0)(_ - 1)
 object Demo19 extends Simulation[Main19]
+
+class Channel extends AggregateProgramSkeleton with BlockT:
+
+  private def gradient(source: Boolean) = rep[Double](Double.MaxValue){x => mux[Double](source){0.0}{minHoodPlus(nbr{x}+nbrRange)}}
+
+  private def broadcast(source: Boolean, input: Double) =
+    rep((Double.MaxValue, Double.MaxValue)){x =>
+      mux[(Double, Double)](source)
+        {(0.0, input)}
+        {minHoodPlus(nbr{x._1} + nbrRange, nbr{x._2})}
+    }
+
+  def distance(source: Boolean, destination: Boolean) =
+    broadcast(source, gradient(destination))
+  override def main() =
+    distance(Set(10, 30, 60, 90) contains mid, mid == 0)
+    //gradient(sense1)
+
+object DemoChannel extends Simulation[Channel]
