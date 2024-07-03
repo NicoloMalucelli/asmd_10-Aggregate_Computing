@@ -54,7 +54,7 @@ rep[Double](Double.MaxValue){x => mux[Double](sense1){0.0}{minHoodPlus(nbr{x}+mu
 
 ### partitions
 
-This function partionates nodes depending on the closest source. Sources are those nodes whose ids are contained in the partitions' set.
+This function partionates nodes depending on the closest source. Sources are those nodes which ids are contained in the partitions' set.
 
 ```
 private def partition(partitions: Set[Int]) = 
@@ -64,4 +64,3 @@ private def partition(partitions: Set[Int]) =
         {minHoodPlus(nbr{x._1} + nbrRange, nbr{x._2})}
     }
 ```
-
